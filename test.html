@@ -1,0 +1,35 @@
+<html>
+	<head>
+		<title>Test observe.js</title>
+		<script src="observe.min.js"></script>
+		<style>
+			.KO { color: red; }
+			.OK { color: green; }
+		</style>
+	</head>
+	<body>
+		<ul>
+			<li>Global observe: <span id="testGlobal" class="KO">KO</span></li>
+			<li>String observe: <span id="testString" class="KO">KO</span></li>
+			<li>Array observe: <span id="testArray" class="KO">KO</span></li>
+			<li>Object observe: <span id="testObject" class="KO">KO</span></li>
+			<li>Object observe (2): <span id="testObject2" class="OK">OK</span></li>
+		</ul>
+	</body>
+	<script>
+		var obj = {a:1, b:2, c:3};
+		Observe(obj, function(){ setDom("OK", "testGlobal"); });
+		Observe(obj, 'a', function(){ setDom("OK", "testString"); });
+		Observe(obj, ['a','b'], function(){ setDom("OK", "testArray"); });
+		Observe(obj, {'a':2}, function(){ setDom("OK", "testObject"); });
+		Observe(obj, {'a':3}, function(){ setDom("KO", "testObject2"); });
+		
+		obj.a += 1;
+		
+		var setDom = function(name, id) {
+			var dom = document.querySelector('#'+id);
+			dom.className = name;
+			dom.innerHTML = name;
+		}
+	</script>
+</html>
