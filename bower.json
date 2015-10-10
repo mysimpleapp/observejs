@@ -1,0 +1,15 @@
+{
+  "name": "observejs",
+  "version": "0.1.0",
+  "homepage": "https://github.com/mysimpleapp/observejs",
+  "authors": [
+    "Nicolas CARREZ <nicolas.carrez@gmail.com>"
+  ],
+  "description": "Tiny javascript library that offer more developper friendly way to use Object.observe.",
+  "main": "observe.js",
+  "license": "MIT",
+  "dependencies": {
+    "object.observe": "~0.2.4",
+    "array.observe": "~0.0.1"
+  }
+}

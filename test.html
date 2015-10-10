@@ -1,6 +1,16 @@
 <html>
 	<head>
 		<title>Test observe.js</title>
+		<script>
+		// load polyfills (only if needed)
+		var loadScript = function(src) {
+			var script = document.createElement('script');
+			script.src = src;
+			document.head.appendChild(script);
+		}
+		if(!Object.observe) loadScript('../object.observe/dist/object-observe.js');
+		if(!Array.observe) loadScript('../array.observe/array-observe.js');
+		</script>
 		<script src="observe.min.js"></script>
 		<style>
 			.KO { color: red; }
