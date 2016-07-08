@@ -1,17 +1,7 @@
 <html>
 	<head>
 		<title>Test observe.js</title>
-		<script>
-		// load polyfills (only if needed)
-		var loadScript = function(src) {
-			var script = document.createElement('script');
-			script.src = src;
-			document.head.appendChild(script);
-		}
-		if(!Object.observe) loadScript('../object.observe/dist/object-observe.js');
-		if(!Array.observe) loadScript('../array.observe/array-observe.js');
-		</script>
-		<script src="observe.min.js"></script>
+		<script src="observe.js"></script>
 		<style>
 			.KO { color: red; }
 			.OK { color: green; }
@@ -19,27 +9,92 @@
 	</head>
 	<body>
 		<ul>
-			<li>Global observe: <span id="testGlobal" class="KO">KO</span></li>
-			<li>String observe: <span id="testString" class="KO">KO</span></li>
-			<li>Array observe: <span id="testArray" class="KO">KO</span></li>
-			<li>Object observe: <span id="testObject" class="KO">KO</span></li>
-			<li>Object observe (2): <span id="testObject2" class="OK">OK</span></li>
+			<li>Observe attribute change: <span id="testChange" class="KO">KO</span></li>
+			<li>Observe attribute no change: <span id="testNoChange" class="OK">OK</span></li>
+			<li>Stop observe attribute change: <span id="testStopChange" class="OK">OK</span></li>
+			<li>Observe all attributes changes: <span id="testAllChanges" class="KO">KO</span></li>
+			<li>Observe son attribute change: <span id="testChangeInSon" class="KO">KO</span></li>
+			<li>Son attribute change stays after son change: <span id="testSonChange" class="KO">KO</span></li>
+			<li>Son change stop observation: <span id="testSonChangeStopped" class="OK">OK</span></li>
+			<li>Son change stop deep observation: <span id="testDeepSonChangeStopped" class="OK">OK</span></li>
+			<li>Observe son change with attribute change: <span id="testSonChangeWithAttr" class="KO">KO</span></li>
+			<li>Observe all sons specific changes: <span id="testAllSonsSpecificChanges" class="KO">KO</span></li>
+			<li>Observe all sons changes: <span id="testAllSonsChanges" class="KO">KO</span></li>
 		</ul>
 	</body>
 	<script>
-		var obj = {a:1, b:2, c:3};
-		Observe(obj, function(){ setDom("OK", "testGlobal"); });
-		Observe(obj, 'a', function(){ setDom("OK", "testString"); });
-		Observe(obj, ['a','b'], function(){ setDom("OK", "testArray"); });
-		Observe(obj, {'a':2}, function(){ setDom("OK", "testObject"); });
-		Observe(obj, {'a':3}, function(){ setDom("KO", "testObject2"); });
 		
-		obj.a += 1;
-		
-		var setDom = function(name, id) {
+		// common function
+		var setDom = function(id, nbChange) {
+			var val = (nbChange===0) ? "OK" : "KO"
 			var dom = document.querySelector('#'+id);
-			dom.className = name;
-			dom.innerHTML = name;
+			dom.className = val;
+			dom.innerHTML = val;
 		}
+		
+		// Observe attribute change
+		var nbChange = 1, obs = O({a:1})
+		Observe(obs, "a", function(){ setDom("testChange", --nbChange); })
+		obs.a = 2
+		
+		// Observe attribute no change
+		var obs = O({a:1})
+		Observe(obs, "a", function(){ setDom("testNoChange", 1); })
+		obs.a = 1
+		
+		// Stop observe attribute change
+		var obs = O({a:1})
+		var obr = Observe(obs, "a", function(){ setDom("testStopChange", 1); })
+		obr.stop()
+		obs.a = 2
+		
+		// Observe all attributes changes
+		var nbChange = 2, obs = O({a:1})
+		Observe(obs, "*", function(){ setDom("testAllChanges", --nbChange); })
+		obs.a = 2
+		obs.b = 1
+
+		// Observe son attribute change
+		var nbChange = 1, obs = O({a:O({a:1})})
+		Observe(obs, "a.a", function(){ setDom("testChangeInSon", --nbChange); })
+		obs.a.a = 2
+
+		// Son attribute change stays after son change
+		var nbChange = 1, obs = O({a:O({a:1})})
+		Observe(obs, "a.a", function(){ setDom("testSonChange", --nbChange); })
+		obs.a = O({a:1})
+		obs.a.a = 2
+
+		// Son change stop observation
+		var son1 = O({a:1}), son2 = O({a:1}), obs = O({a:son1})
+		Observe(obs, "a.a", function(){ setDom("testSonChangeStopped", 1); })
+		obs.a = son2
+		son1.a = 2
+
+		// Son change stop observation
+		var son11 = O({a:1}), son1 = O({a:son11}), obs = O({a:son1})
+		Observe(obs, "a.a.a", function(){ setDom("testDeepSonChangeStopped", 1); })
+		obs.a = O({a:O({a:1})})
+		son11.a = 2
+
+		// Observe son change with attribute change
+		var nbChange = 1, obs = O({a:O({a:1})})
+		Observe(obs, "a.a", function(){ setDom("testSonChangeWithAttr", --nbChange); })
+		obs.a = O({a:2})
+
+		// Observe all sons specific changes
+		var nbChange = 3, obs = O({a:O({a:1}), b:O({a:1})})
+		Observe(obs, "*.a", function(){ setDom("testAllSonsSpecificChanges", --nbChange); })
+		obs.a.a = 2
+		obs.b.a = 2
+		obs.c = O({a:1})
+
+		// Observe all sons changes
+		var nbChange = 3, obs = O({a:1, b:O({a:1}), c:O({a:O({a:1})})})
+		Observe(obs, "**", function(){ setDom("testAllSonsChanges", --nbChange); })
+		obs.a = 2
+		obs.b.a = 2
+		obs.c.a.a = 2
+		
 	</script>
 </html>
